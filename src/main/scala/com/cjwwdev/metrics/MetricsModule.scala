@@ -13,31 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.cjwwdev.metricsold
+package metrics
 
 import javax.inject.{Inject, Singleton}
 
 import com.kenshoo.play.metrics._
-import play.api.{Configuration, Environment}
 import play.api.inject.{ApplicationLifecycle, Module}
+import play.api.{Configuration, Environment}
 
 class MetricsModule extends Module  {
   def bindings(environment: Environment, configuration: Configuration) = {
     if (configuration.getBoolean("metrics.enabled").getOrElse(true)) {
       Seq(
         bind[MetricsFilter].to[MetricsFilterImpl].eagerly,
-        bind[Metrics].to[GraphiteMetricsImpl].eagerly
+        bind[Metrics].to[GraphiteMetricsImpl].eagerly,
+        bind[GraphiteReporter].to[GraphiteReporterImpl].eagerly
       )
     } else {
       Seq(
         bind[MetricsFilter].to[DisabledMetricsFilter].eagerly,
-        bind[Metrics].to[DisabledMetrics].eagerly
+        bind[Metrics].to[DisabledMetrics].eagerly,
+        bind[GraphiteReporter].to[DisabledGraphiteReporterImpl].eagerly
       )
     }
   }
 }
 
 @Singleton
-class GraphiteMetricsImpl @Inject() (lifecycle: ApplicationLifecycle, configuration: Configuration) extends MetricsImpl(lifecycle, configuration) {
+class GraphiteMetricsImpl @Inject()(lifecycle: ApplicationLifecycle, configuration: Configuration) extends MetricsImpl(lifecycle, configuration) {
   override def onStop() = {}
 }
