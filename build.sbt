@@ -18,6 +18,7 @@ libraryDependencies ++= Seq(
 )
 
 resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
+resolvers += "breadfan" at "https://dl.bintray.com/breadfan/maven/"
 
 bintrayOrganization                   := Some("cjww-development")
 bintrayReleaseOnPublish in ThisBuild  := true
