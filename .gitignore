@@ -15,5 +15,6 @@ server.pid
 .cache
 .DS_Store
 .idea/
+.idea/*
 Procfile
 project/project/
