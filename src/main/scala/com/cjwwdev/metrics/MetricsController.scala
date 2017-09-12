@@ -26,7 +26,7 @@ class MetricsController @Inject()(metrics: Metrics) extends Controller {
     try {
       Ok(metrics.toJson).as("application/json").withHeaders("Cache-Control" -> "must-revalidate,no-cache,no-store")
     } catch {
-      case ex: MetricsDisabledException => InternalServerError("metrics plugin not enabled")
+      case _: MetricsDisabledException => InternalServerError("metrics plugin not enabled")
     }
   }
 }

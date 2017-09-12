@@ -9,5 +9,23 @@ A module to report captured metrics to graphite
 To utilise this library add this to your sbt build file
 
 ```
-"com.cjww-dev.libs" % "metrics-reporter_2.11" % "<SEE_VERSION_ABOVE>" 
+"com.cjww-dev.libs" % "metrics-reporter_2.11" % "0.4.0" 
 ```
+
+Then add this snippet in your application.conf file.
+
+```hocon
+    play.modules.enabled += "com.cjwwdev.metrics.MetricsModule"
+```
+
+Then add this snippet your routes file.
+
+```hocon
+    GET     /admin/metrics          com.cjwwdev.metrics.MetricsController
+```
+
+Display all current, captured metrics for your app on a web page in a Json format.
+
+### License
+
+This code is open source software licensed under the [Apache 2.0 License]("http://www.apache.org/licenses/LICENSE-2.0.html")
