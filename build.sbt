@@ -12,7 +12,7 @@ scalaVersion  := "2.11.11"
 organization  := "com.cjww-dev.libs"
 
 libraryDependencies ++= Seq(
-  "com.typesafe.play"      % "play_2.11"        % "2.5.16",
+  "com.typesafe.play"      % "play_2.11"        % "2.5.18",
   "com.codahale.metrics"   % "metrics-graphite" % "3.0.2",
   "de.threedimensions"    %% "metrics-play"     % "2.5.13"
 )
