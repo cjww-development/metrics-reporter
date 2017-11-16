@@ -21,6 +21,8 @@ import com.kenshoo.play.metrics._
 import play.api.inject.{ApplicationLifecycle, Module}
 import play.api.{Configuration, Environment}
 
+import scala.util.control.NoStackTrace
+
 class MetricsModule extends Module  {
   def bindings(environment: Environment, configuration: Configuration) = {
     if (configuration.getBoolean("metrics.enabled").getOrElse(true)) {
@@ -32,7 +34,7 @@ class MetricsModule extends Module  {
     } else {
       Seq(
         bind[MetricsFilter].to[DisabledMetricsFilter].eagerly,
-        bind[Metrics].to[DisabledMetrics].eagerly,
+        bind[Metrics].to[CustomDisabledMetrics].eagerly,
         bind[GraphiteReporter].to[DisabledGraphiteReporterImpl].eagerly
       )
     }
@@ -43,3 +45,11 @@ class MetricsModule extends Module  {
 class GraphiteMetricsImpl @Inject()(lifecycle: ApplicationLifecycle, configuration: Configuration) extends MetricsImpl(lifecycle, configuration) {
   override def onStop() = {}
 }
+
+class CustomDisabledMetrics extends Metrics {
+  override def defaultRegistry  = throw new DisabledMetricsException
+  override def toJson           = throw new DisabledMetricsException
+}
+
+private class DisabledMetricsException extends NoStackTrace
+
