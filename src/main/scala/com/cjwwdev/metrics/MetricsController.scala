@@ -16,13 +16,13 @@
 
 package com.cjwwdev.metrics
 
-import javax.inject.{Inject, Singleton}
-
 import com.kenshoo.play.metrics.{Metrics, MetricsDisabledException}
-import play.api.mvc.{Action, Controller}
+import javax.inject.{Inject, Singleton}
+import play.api.mvc.{BaseController, ControllerComponents}
 
 @Singleton
-class MetricsController @Inject()(metrics: Metrics) extends Controller {
+class MetricsController @Inject()(val controllerComponents: ControllerComponents,
+                                  val metrics: Metrics) extends BaseController {
   def metricsToJson = Action {
     try {
       Ok(metrics.toJson).as("application/json").withHeaders("Cache-Control" -> "must-revalidate,no-cache,no-store")
