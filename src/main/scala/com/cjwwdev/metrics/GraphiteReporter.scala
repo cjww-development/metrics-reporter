@@ -1,61 +1,94 @@
-// Copyright (C) 2016-2017 the original author or authors.
-// See the LICENCE.txt file distributed with this work for additional
-// information regarding copyright ownership.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * Copyright 2018 CJWW Development
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.cjwwdev.metrics
 
 import java.net.InetSocketAddress
 import java.util.concurrent.TimeUnit.{MILLISECONDS, SECONDS}
-import javax.inject.{Inject, Singleton}
 
 import com.codahale.metrics.graphite.{Graphite, GraphiteReporter => GR}
 import com.codahale.metrics.{MetricFilter, SharedMetricRegistries}
 import com.typesafe.config.Config
-import play.api.{Application, Configuration, Logger}
+import javax.inject.Inject
+import org.slf4j.{Logger, LoggerFactory}
+import play.api.Configuration
+import play.api.inject.ApplicationLifecycle
 
-private class MissingMetricsConfigException extends Exception
+import scala.concurrent.Future
 
-@Singleton
-class GraphiteReporterImpl @Inject()(app: Application, configuration: Configuration) extends GraphiteReporter {
-  private val metricsConfig: Config    = configuration.underlying.getConfig("metrics")
-  private val metricsEnabled: Boolean  = metricsConfig.getBoolean("enabled")
-  private val graphiteEnabled: Boolean = metricsConfig.getBoolean("graphite.enabled")
-  private val enabled: Boolean         = metricsEnabled && graphiteEnabled
+class GraphiteReporterImpl @Inject()(lifecycle: ApplicationLifecycle, configuration: Configuration) extends GraphiteReporter {
+  private val metricsConfig: Config     = configuration.underlying.getConfig("metrics")
+  override val metricsEnabled: Boolean  = metricsConfig.getBoolean("enabled")
+  override val graphiteEnabled: Boolean = metricsConfig.getBoolean("graphite.enabled")
+  override val registryName: String     = metricsConfig.getString("name")
+  override val graphiteHost: String     = metricsConfig.getString("graphite.host")
+  override val graphitePort: Int        = metricsConfig.getInt("graphite.port")
+  override val prefix: String           = metricsConfig.getString("graphite.prefix")
+  override val interval: Long           = metricsConfig.getLong("graphite.interval")
 
-  private val registryName: String     = metricsConfig.getString("name")
+  bootGraphiteReporter()
 
-
-  private def initialiseGraphiteReporter(app: Application): Unit = {
-    Logger.info("Initialising graphite reporting module")
-
-    val graphite = new Graphite(new InetSocketAddress(metricsConfig.getString("graphite.host"), metricsConfig.getInt("graphite.port")))
-    val prefix = metricsConfig.getString("graphite.prefix")
-
-    val reporter = GR.forRegistry(SharedMetricRegistries.getOrCreate(registryName))
-      .prefixedWith(s"$prefix.${java.net.InetAddress.getLocalHost.getHostName}")
-      .convertRatesTo(SECONDS)
-      .convertDurationsTo(MILLISECONDS)
-      .filter(MetricFilter.ALL)
-      .build(graphite)
-
-    reporter.start(metricsConfig.getLong("graphite.interval"), SECONDS)
+  lifecycle.addStopHook {
+    () => Future.successful(teardownGraphiteReporter())
   }
-
-  initialiseGraphiteReporter(app)
 }
 
-class DisabledGraphiteReporterImpl extends GraphiteReporter
+class DisabledGraphiteReporterImpl extends GraphiteReporter {
+  override val metricsEnabled: Boolean  = false
+  override val graphiteEnabled: Boolean = false
+  override val registryName: String     = "disabled"
+  override val graphiteHost: String     = "disabled"
+  override val graphitePort: Int        = 1024
+  override val prefix: String           = "disabled"
+  override val interval: Long           = 1L
+}
 
-trait GraphiteReporter
+trait GraphiteReporter {
+  val metricsEnabled: Boolean
+  val graphiteEnabled: Boolean
+
+  val registryName: String
+
+  val graphiteHost: String
+  val graphitePort: Int
+
+  val prefix: String
+
+  val interval: Long
+
+  private val logger: Logger = LoggerFactory.getLogger(getClass)
+
+  private val enabled: Boolean = metricsEnabled && graphiteEnabled
+
+  private val graphite = new Graphite(new InetSocketAddress(graphiteHost, graphitePort))
+
+  private val reporter = GR
+    .forRegistry(SharedMetricRegistries.getOrCreate(registryName))
+    .prefixedWith(s"$prefix.${java.net.InetAddress.getLocalHost.getHostName}")
+    .convertRatesTo(SECONDS)
+    .convertDurationsTo(MILLISECONDS)
+    .filter(MetricFilter.ALL)
+    .build(graphite)
+
+  def bootGraphiteReporter(): Unit = {
+    logger.info("Initialising graphite reporting module")
+    reporter.start(interval, SECONDS)
+  }
+
+  def teardownGraphiteReporter(): Unit = {
+    reporter.stop()
+  }
+}
