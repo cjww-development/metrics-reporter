@@ -25,7 +25,7 @@ val btVersion : String = Try(ConfigFactory.load.getString("version")) match {
 }
 
 val dependencies: Seq[ModuleID] = Seq(
-  "com.typesafe.play"      % "play_2.11"        % "2.6.20",
+  "com.typesafe.play"      % "play_2.12"        % "2.6.20",
   "com.codahale.metrics"   % "metrics-graphite" % "3.0.2",
   "com.kenshoo"           %% "metrics-play"     % "2.6.19_0.7.0"
 )
