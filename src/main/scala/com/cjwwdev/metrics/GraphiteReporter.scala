@@ -31,13 +31,13 @@ import scala.concurrent.Future
 
 class GraphiteReporterImpl @Inject()(lifecycle: ApplicationLifecycle, configuration: Configuration) extends GraphiteReporter {
   private val metricsConfig: Config     = configuration.underlying.getConfig("metrics")
-  override val metricsEnabled: Boolean  = metricsConfig.getBoolean("enabled")
-  override val graphiteEnabled: Boolean = metricsConfig.getBoolean("graphite.enabled")
-  override val registryName: String     = metricsConfig.getString("name")
-  override val graphiteHost: String     = metricsConfig.getString("graphite.host")
-  override val graphitePort: Int        = metricsConfig.getInt("graphite.port")
-  override val prefix: String           = metricsConfig.getString("graphite.prefix")
-  override val interval: Long           = metricsConfig.getLong("graphite.interval")
+  override lazy val metricsEnabled: Boolean  = metricsConfig.getBoolean("enabled")
+  override lazy val graphiteEnabled: Boolean = metricsConfig.getBoolean("graphite.enabled")
+  override lazy val registryName: String     = metricsConfig.getString("name")
+  override lazy val graphiteHost: String     = metricsConfig.getString("graphite.host")
+  override lazy val graphitePort: Int        = metricsConfig.getInt("graphite.port")
+  override lazy val prefix: String           = metricsConfig.getString("graphite.prefix")
+  override lazy val interval: Long           = metricsConfig.getLong("graphite.interval")
 
   bootGraphiteReporter()
 
@@ -47,13 +47,13 @@ class GraphiteReporterImpl @Inject()(lifecycle: ApplicationLifecycle, configurat
 }
 
 class DisabledGraphiteReporterImpl extends GraphiteReporter {
-  override val metricsEnabled: Boolean  = false
-  override val graphiteEnabled: Boolean = false
-  override val registryName: String     = "disabled"
-  override val graphiteHost: String     = "disabled"
-  override val graphitePort: Int        = 1024
-  override val prefix: String           = "disabled"
-  override val interval: Long           = 1L
+  override lazy val metricsEnabled: Boolean  = false
+  override lazy val graphiteEnabled: Boolean = false
+  override lazy val registryName: String     = "disabled"
+  override lazy val graphiteHost: String     = "disabled"
+  override lazy val graphitePort: Int        = 1024
+  override lazy val prefix: String           = "disabled"
+  override lazy val interval: Long           = 1L
 }
 
 trait GraphiteReporter {
