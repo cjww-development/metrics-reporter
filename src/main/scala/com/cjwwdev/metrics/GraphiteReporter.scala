@@ -69,13 +69,13 @@ trait GraphiteReporter {
 
   val interval: Long
 
-  private val logger: Logger = LoggerFactory.getLogger(getClass)
+  private lazy val logger: Logger = LoggerFactory.getLogger(getClass)
 
-  private val enabled: Boolean = metricsEnabled && graphiteEnabled
+  private lazy val enabled: Boolean = metricsEnabled && graphiteEnabled
 
-  private val graphite = new Graphite(new InetSocketAddress(graphiteHost, graphitePort))
+  private lazy  val graphite = new Graphite(new InetSocketAddress(graphiteHost, graphitePort))
 
-  private val reporter = GR
+  private lazy val reporter = GR
     .forRegistry(SharedMetricRegistries.getOrCreate(registryName))
     .prefixedWith(s"$prefix.${java.net.InetAddress.getLocalHost.getHostName}")
     .convertRatesTo(SECONDS)
